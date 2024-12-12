@@ -7,15 +7,15 @@ import "../styles/layout.css";
 import "../styles/data-table.css";
 
 function Layout() {
-  // const { data, isFetched } = useQuery({
-  //   queryKey: ["tramitesCount"],
-  // });
+  const { data, isFetched } = useQuery({
+    queryKey: ["tramitesCount"],
+  });
 
   return (
     <div className="layout-container">
-      {/* <Header data={data} isFetched={isFetched} /> */}
+      <Header data={data} isFetched={isFetched} />
       <div className="children-container">
-        {/* <Outlet context={{ data, isFetched }} /> */}
+        <Outlet context={{ data, isFetched }} />
       </div>
       <Footer />
     </div>
