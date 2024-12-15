@@ -23,7 +23,8 @@ body {
 .captcha {
     height: 70px;
     width: 100%;
-    background-color: cadetblue;
+    justify-content: center;
+    display: flex;
 }
 
 .form-label {

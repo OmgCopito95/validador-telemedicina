@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 import "./styles/styles.css";
 import logo from "../assets/images/logo.png";
@@ -8,25 +9,35 @@ const Formulario = () => {
   const [formData, setFormData] = useState({
     codigoValidacion: "",
     fechaDocumento: "",
-    captcha: "",
+    captcha: "", 
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaVerificado, setCaptchaVerificado] = useState(false); //para ver si se completo el captcha
 
   const URL_FETCH =
     "https://dev-telemedicina.ms.gba.gov.ar/api/validador-documentos/validate-codigo-documento";
 
   const navigate = useNavigate();
 
-  // manejo cambios en los inputs del formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // manejo el envio del formulario
+  const verificarCaptcha = (value) => {
+    setCaptchaVerificado(true); // lo marca verificado
+    setFormData((prev) => ({ ...prev, captcha: value })); // guardo respuesta
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!captchaVerificado) {
+      alert("Por favor, complete el CAPTCHA.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -67,14 +78,12 @@ const Formulario = () => {
         </div>
       </div>
 
-      {/* formulario */}
       <div className="row mt-5 px-3 px-md-0 justify-content-center">
         <div className="col-12 col-md-6">
           <form
             onSubmit={handleSubmit}
             className="contenedor-formulario row d-flex flex-column justify-content-between align-items-center"
           >
-            {/* inputs */}
             <div className="row p-0">
               <div className="col-12 text-center">
                 <label htmlFor="codigoValidacion" className="form-label">
@@ -108,15 +117,15 @@ const Formulario = () => {
             </div>
 
             {/* captcha */}
-            {/* <div className="row p-0 justify-content-center">
-              <div className="col-12 col-md-6">
-                <div className="captcha d-flex justify-content-center align-items-center text-white">
-                  CAPTCHA
-                </div>
+            <div className="row p-0 justify-content-center">
+              <div className="col-12 col-md-6 captcha">
+                <HCaptcha
+                  sitekey="c84ca460-b2e2-46c0-94c6-91f03be6e746" 
+                  onVerify={verificarCaptcha}
+                />
               </div>
-            </div> */}
+            </div>
 
-            {/* boton */}
             <div className="row justify-content-center p-0">
               <button
                 type="submit"
@@ -129,6 +138,7 @@ const Formulario = () => {
           </form>
         </div>
       </div>
+
     </div>
   );
 };
