@@ -1,8 +1,14 @@
-# React + Vite
+# Validador Telemedicina 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Instalación de dependencias luego de clonar el repo
 
-Currently, two official plugins are available:
+```bash
+docker compose run -it --rm node npm install
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Instalación de un nuevo paquete
+
+```bash
+docker compose run -it --rm node npm install [paquete]
+```

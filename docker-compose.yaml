@@ -1,0 +1,18 @@
+services:
+
+  node:
+    build:
+      dockerfile: docker/Dockerfile
+      context: .
+      target: node-local
+    ports:
+      - 5173:5173
+    volumes:
+      - .:/workdir
+    labels:
+      - "traefik.http.routers.${APP_NAME}-ui.rule=PathPrefix(`/${APP_NAME}`)"
+
+networks:
+  default:
+    name: dev
+    external: true

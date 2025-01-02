@@ -1,5 +1,5 @@
 import React from 'react';
-import './styles/styles.css'; 
+import './styles/styles.css';
 import logo from '../assets/images/logo.png';
 
 const DocumentoInvalido = () => {
@@ -24,16 +24,29 @@ const DocumentoInvalido = () => {
         </div>
       </div>
 
-      <div className="row justify-content-center px-3 px-md-0">
+      <div className="row justify-content-center px-3 px-md-0 mt-4">
         <button
           type="button"
           className="boton col-12 col-md-3 py-3 btn btn-lg btn-primary"
-          onClick={() =>
-            window.location.href = "https://www.ms.gba.gov.ar/sitios/misalud/"
-          }
+          onClick={() => window.history.back()}
         >
           Aceptar
         </button>
+      </div>
+
+      <div className="row mt-5 justify-content-center">
+        <div className="col-12 col-md-6 d-flex justify-content-center">
+          <a
+            href="#"
+            className="link-home"
+            onClick={(e) => {
+              e.preventDefault();
+              window.history.back();
+            }}
+          >
+            <i className="bi bi-arrow-return-left"></i> Volver atrás
+          </a>
+        </div>
       </div>
     </div>
   );

@@ -9,16 +9,18 @@ const Formulario = () => {
   const [formData, setFormData] = useState({
     codigoValidacion: "",
     fechaDocumento: "",
-    captcha: "", 
+    captcha: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaVerificado, setCaptchaVerificado] = useState(false); //para ver si se completo el captcha
+  const [errorMessage, setErrorMessage] = useState("");
+  const [validationResult, setValidationResult] = useState(null);
+  const navigate = useNavigate();
 
   const URL_FETCH =
-    "https://dev-telemedicina.ms.gba.gov.ar/api/validador-documentos/validate-codigo-documento";
-
-  const navigate = useNavigate();
+    "https://misaluddigital.ms.gba.gov.ar/api/validador-documentos/validate-codigo-documento";
+  const URL_CALLBACK =
+    "https://sistemas.ms.gba.gov.ar/validador-telemedicina/";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,52 +28,110 @@ const Formulario = () => {
   };
 
   const verificarCaptcha = (value) => {
-    setCaptchaVerificado(true); // lo marca verificado
-    setFormData((prev) => ({ ...prev, captcha: value })); // guardo respuesta
+    setFormData((prev) => ({ ...prev, captcha: value }));
+  };
+
+  const validateForm = () => {
+    const { codigoValidacion, fechaDocumento, captcha } = formData;
+    return (
+      codigoValidacion.trim() !== "" &&
+      fechaDocumento.trim() !== "" &&
+      captcha.trim() !== ""
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+    setValidationResult(null);
 
-    if (!captchaVerificado) {
-      alert("Por favor, complete el CAPTCHA.");
+    if (!validateForm()) {
+      setErrorMessage("Por favor, completa todos los campos.");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const data = new FormData();
-      data.append("codigoValidacion", formData.codigoValidacion);
-      data.append("fechaDocumento", formData.fechaDocumento);
-      data.append("h-captcha-response", formData.captcha);
-
-      const response = await fetch(URL_FETCH, {
-        method: "POST",
-        body: data,
-      });
+      const response = await fetch(
+        `${URL_FETCH}?validationCode=${formData.codigoValidacion}&attentionDate=${formData.fechaDocumento}&captchaResponse=${formData.captcha}`,
+        { method: "GET" }
+      );
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
 
-      const resultData = await response.json();
-
-      if (resultData.estado === "SUCCESS") {
-        navigate("/documento-valido", { state: resultData }); // si esta valido, va a la pagina de valido
+      const result = await response.json();
+      if (result.estado === "SUCCESS") {
+        setValidationResult({
+          estado: "SUCCESS",
+          descripcion: result.descripcion,
+          dniPaciente: result.dniPaciente,
+          tipoDocumento: result.tipoDocumento,
+          nombreApellidoMedico: result.nombreApellidoMedico,
+          matriculaProfesional: result.matriculaProfesional,
+        });
       } else {
-        navigate("/documento-invalido"); // si no es valido, va a la pagina de invalido
+        setValidationResult({ estado: "FAIL" });
       }
     } catch (err) {
-      console.error("Error al validar el documento:", err);
-      navigate("/documento-invalido"); // si hay un error, va a invalido
+      console.error(err);
+      setErrorMessage(
+        "Hubo un problema en el servidor. Inténtalo nuevamente más tarde."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (validationResult) {
+    return (
+      <div className="container py-5">
+        {validationResult.estado === "SUCCESS" ? (
+          <div className="container-valido">
+            <h1 className="titulo-valido">Documento válido</h1>
+            <p className="texto">El documento es válido</p>
+            <div className="informacion-valido">
+              <p>{validationResult.descripcion}</p>
+              <p>Tipo: DNI {validationResult.dniPaciente}</p>
+              <p>{validationResult.tipoDocumento}</p>
+              <p>Profesional: {validationResult.nombreApellidoMedico}</p>
+              <p>Matrícula: {validationResult.matriculaProfesional}</p>
+            </div>
+            <a
+              className="text-decoration-none text-white btn btn-aceptar mt-1"
+              href={URL_CALLBACK}
+            >
+              Aceptar
+            </a>
+            <a className="color-link mt-1" href={URL_CALLBACK}>
+              Volver atrás
+            </a>
+          </div>
+        ) : (
+          <div className="container-invalido">
+            <h1 className="titulo-invalido">Documento no válido.</h1>
+            <p className="texto">
+              El código ingresado no corresponde a un documento válido.
+            </p>
+            <a
+              className="text-decoration-none text-white btn btn-aceptar"
+              href={URL_CALLBACK}
+            >
+              Aceptar
+            </a>
+            <a className="color-link mt-1" href={URL_CALLBACK}>
+              Volver atrás
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="container py-5 d-flex flex-column justify-content-between">
+    <div className="container py-5">
       <div className="row justify-content-center">
         <div className="col-12 col-md-8 col-lg-6 col-xl-4">
           <img className="img-fluid" src={logo} alt="Logo" />
@@ -96,6 +156,9 @@ const Formulario = () => {
                   name="codigoValidacion"
                   placeholder="Ingresá el código"
                   required
+                  minLength={8}
+                  maxLength={8}
+                  pattern=".{8}"
                   value={formData.codigoValidacion}
                   onChange={handleChange}
                 />
@@ -116,15 +179,18 @@ const Formulario = () => {
               </div>
             </div>
 
-            {/* captcha */}
             <div className="row p-0 justify-content-center">
               <div className="col-12 col-md-6 captcha">
                 <HCaptcha
-                  sitekey="c84ca460-b2e2-46c0-94c6-91f03be6e746" 
+                  sitekey="c84ca460-b2e2-46c0-94c6-91f03be6e746"
                   onVerify={verificarCaptcha}
                 />
               </div>
             </div>
+
+            {errorMessage && (
+              <div className="alert alert-danger mt-3">{errorMessage}</div>
+            )}
 
             <div className="row justify-content-center p-0">
               <button
@@ -138,7 +204,6 @@ const Formulario = () => {
           </form>
         </div>
       </div>
-
     </div>
   );
 };
